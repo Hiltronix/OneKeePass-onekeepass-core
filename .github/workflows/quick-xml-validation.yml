@@ -1,0 +1,59 @@
+name: Validate patched quick-xml 0.41
+
+on:
+  push:
+    branches: [security/quick-xml-0.41]
+    paths:
+      - '.github/workflows/quick-xml-validation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-test-core:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - name: Check out quick-xml hardening branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Configure Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Botan and Rust native build prerequisites
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang cmake ninja-build pkg-config python3 libssl-dev
+
+      - name: Resolve patched quick-xml lockfile
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo update -p quick-xml --precise 0.41.0
+          cargo metadata --locked --format-version 1 > /dev/null
+          grep -A 3 '^name = "quick-xml"' Cargo.lock
+          git diff --check
+
+      - name: Compile and test core XML handling and SSH-agent feature
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo test --lib --locked --features desktop-ssh-agent
+
+      - name: Commit resolved Cargo.lock to validation branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Cargo.lock
+          if git diff --cached --quiet; then
+            echo 'No lockfile update required'
+          else
+            git commit -m "Lock quick-xml 0.41.0 after core unit tests pass"
+            git push origin HEAD:security/quick-xml-0.41
+          fi
