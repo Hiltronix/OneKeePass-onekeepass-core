@@ -595,10 +595,12 @@ mod tests {
         assert_eq!(dt.date(), NaiveDate::from_ymd(2020, 5, 27));
         assert_eq!(dt.time(), NaiveTime::from_hms(22, 11, 36));
 
-        let ldt = Local.from_utc_datetime(&dt); //2020-05-27T15:11:36-07:00 , 7.00 hours UTC time - PDT time
-        println!("ldt is {:?}", ldt);
-        assert_eq!(ldt.date(), Local.ymd(2020, 5, 27));
-        assert_eq!(ldt.time(), NaiveTime::from_hms(15, 11, 36));
+        // Verify the intended Pacific daylight-time conversion explicitly.
+        // Local refers to the test runner's timezone (UTC on GitHub Actions),
+        // so its previous use made this test fail outside Pacific Time.
+        let pdt = chrono_tz::US::Pacific.from_utc_datetime(&dt);
+        assert_eq!(pdt.date_naive(), NaiveDate::from_ymd(2020, 5, 27));
+        assert_eq!(pdt.time(), NaiveTime::from_hms(15, 11, 36));
 
         //assert_eq!(d, Some("2020-05-27T22:11:36"));
         // if let Some(d) = dt {

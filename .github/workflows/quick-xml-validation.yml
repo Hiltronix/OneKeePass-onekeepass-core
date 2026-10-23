@@ -39,6 +39,7 @@ jobs:
           git diff --check
 
       # Validate post-0.41 BytesText and GeneralRef API adaptations.
+      # Tests must be independent of the CI host timezone.
       - name: Compile and test core XML handling and SSH-agent feature
         shell: bash
         run: |
