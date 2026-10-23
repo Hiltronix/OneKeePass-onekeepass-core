@@ -40,7 +40,11 @@ macro_rules! read_tags {
                     match e.name().as_ref() {
                         $($start_tag => {
                             let content = $self.reader.read_text(QName($start_tag))?;
-                            $start_tag_action(content.to_string(),&mut e.attributes(),&mut $self.stream_cipher);
+                            // v0.41 returns encoded BytesText, not Cow<str>.
+                            // Decode, then let existing field handlers unescape as before.
+                            let content = content.decode().map_err(|e|
+                                Error::XmlReadingFailed(format!("XML text decoding failed: {e}")))?;
+                            $start_tag_action(content.into_owned(),&mut e.attributes(),&mut $self.stream_cipher);
                         }
                         )*
 
@@ -221,7 +225,7 @@ impl<'a> XmlReader<'a> {
                 }
                 Ok(Event::DocType(_)) => {}
                 Ok(Event::PI(_)) => {}
-                Ok(Event::Text(_)) => {}
+                Ok(Event::Text(_)) | Ok(Event::GeneralRef(_)) => {}
                 Ok(Event::Start(ref e)) => {
                     // if !xml_decl_available {
                     //     return Err(Error::XmlReadingFailed(format!(
@@ -1395,7 +1399,7 @@ impl<'a> FileKeyXmlReader<'a> {
                 }
                 Ok(Event::DocType(_)) => {}
                 Ok(Event::PI(_)) => {}
-                Ok(Event::Text(_)) => {}
+                Ok(Event::Text(_)) | Ok(Event::GeneralRef(_)) => {}
 
                 Ok(Event::Start(ref e)) => {
                     if !xml_decl_available {
@@ -1822,6 +1826,34 @@ mod tests {
 
         let mut reader = XmlReader::new(xml.as_bytes(), None);
         assert!(reader.parse().is_ok());
+    }
+
+    #[test]
+    fn patched_quick_xml_preserves_raw_escaped_text() {
+        let xml = b"<Notes>A &amp; B &lt;C&gt;</Notes>";
+        let mut reader = QuickXmlReader::from_reader(xml.as_slice());
+        let mut buf = Vec::new();
+        match reader.read_event_into(&mut buf).unwrap() {
+            Event::Start(e) => {
+                let text = reader.read_text(e.name()).unwrap();
+                let decoded = text.decode().unwrap();
+                assert_eq!(content_unescape(&decoded), "A & B <C>");
+            }
+            other => panic!("Expected start tag, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn patched_quick_xml_rejects_duplicate_attributes() {
+        let xml = b"<Value Protected=\"True\" Protected=\"False\" />";
+        let mut reader = QuickXmlReader::from_reader(xml.as_slice());
+        let mut buf = Vec::new();
+        match reader.read_event_into(&mut buf).unwrap() {
+            Event::Empty(e) => {
+                assert!(e.attributes().collect::<std::result::Result<Vec<_>, _>>().is_err());
+            }
+            other => panic!("Expected empty Value tag, got {other:?}"),
+        }
     }
 
     #[ignore]

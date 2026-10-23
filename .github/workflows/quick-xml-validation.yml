@@ -38,6 +38,7 @@ jobs:
           grep -A 3 '^name = "quick-xml"' Cargo.lock
           git diff --check
 
+      # Validate post-0.41 BytesText and GeneralRef API adaptations.
       - name: Compile and test core XML handling and SSH-agent feature
         shell: bash
         run: |
