@@ -11,7 +11,7 @@ pub mod custom_icons;
 mod db;
 mod db_merge;
 mod net_tls;
-#[cfg(feature = "favicon")]
+#[cfg(any(feature = "favicon", feature = "favicon-local"))]
 pub mod favicon;
 mod form_data;
 

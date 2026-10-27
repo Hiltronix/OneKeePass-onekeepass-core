@@ -28,7 +28,7 @@ pub async fn download_and_add_custom_icon(db_key: &str, url: &str) -> Result<Cus
         .ok_or_else(|| Error::NotFound("Newly added custom icon not found".into()))
 }
 
-#[cfg(feature = "favicon")]
+#[cfg(any(feature = "favicon", feature = "favicon-local"))]
 pub fn normalize_image_to_png(input: &[u8]) -> Result<Vec<u8>> {
     crate::favicon::normalize_image_to_png(input, 64)
 }

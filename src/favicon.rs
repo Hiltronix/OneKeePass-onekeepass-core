@@ -1,20 +1,26 @@
 use image::imageops::FilterType;
 use image::ImageFormat;
+#[cfg(feature = "favicon")]
 use regex::Regex;
 use std::io::Cursor;
 
 use crate::error::{Error, Result};
 
+#[cfg(feature = "favicon")]
 const TARGET_SIZE: u32 = 64;
+#[cfg(feature = "favicon")]
 const TIMEOUT_SECS: u64 = 8;
+#[cfg(feature = "favicon")]
 const MAX_BODY_BYTES: u64 = 2 * 1024 * 1024;
 
 // Many CDNs (Squarespace, Cloudflare, Wix, ...) return 403 / serve HTML error
 // pages to clients that don't look like a real browser. A common Chrome UA
 // avoids that without raising any other red flags.
+#[cfg(feature = "favicon")]
 const USER_AGENT: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) \
      Chrome/124.0.0.0 Safari/537.36";
 
+#[cfg(feature = "favicon")]
 pub async fn download_favicon(url: &str) -> Result<Vec<u8>> {
     log::debug!("Going to download favicon for url {}", url);
 
@@ -83,6 +89,7 @@ pub async fn download_favicon(url: &str) -> Result<Vec<u8>> {
     )))
 }
 
+#[cfg(feature = "favicon")]
 async fn fetch_bytes(client: &reqwest::Client, url: &str) -> Result<Vec<u8>> {
     let resp = client
         .get(url)
@@ -122,6 +129,7 @@ async fn fetch_bytes(client: &reqwest::Client, url: &str) -> Result<Vec<u8>> {
 // Extracts the href from the first matching <link rel="..."> tag for icon-like
 // rel values: "icon", "shortcut icon", "apple-touch-icon",
 // "apple-touch-icon-precomposed".
+#[cfg(feature = "favicon")]
 fn extract_icon_url_from_html(html: &str, base_url: &str) -> Option<String> {
     let re = Regex::new(
         r#"(?is)<link\b[^>]*\brel\s*=\s*["']?(?:shortcut\s+icon|icon|apple-touch-icon(?:-precomposed)?)["']?[^>]*\bhref\s*=\s*["']([^"']+)["']"#,

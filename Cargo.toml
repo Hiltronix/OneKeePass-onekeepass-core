@@ -95,7 +95,11 @@ version = "*"
 features = ["common-password"]
 
 [features]
-favicon = ["dep:reqwest", "dep:image", "dep:ico"]
+# Preserve the original network-capable favicon feature for non-Windows clients.
+# Desktop portable builds use only image/ICO decoding and never compile the
+# optional remote favicon downloader.
+favicon-local = ["dep:image", "dep:ico"]
+favicon = ["favicon-local", "dep:reqwest"]
 desktop-ssh-agent = []
 
 [lints.rust]
