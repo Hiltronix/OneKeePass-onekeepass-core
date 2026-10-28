@@ -82,7 +82,7 @@ webpki-roots = "1.0"
 botan = {version = "0.11.1", features = ["vendored"] }
 
 # Passkey / WebAuthn cryptography (shared across desktop and mobile)
-p256           = { version = "0.13", features = ["ecdsa", "pkcs8", "pem"] }
+p256           = { version = "=0.14.0-rc.10", features = ["ecdsa", "pkcs8", "pem", "getrandom"] }
 ed25519-dalek  = { version = "2", features = ["pkcs8", "rand_core"] }
 rsa            = { version = "0.9", features = ["sha2"] }
 sha2           = "0.10"
