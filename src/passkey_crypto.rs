@@ -13,7 +13,8 @@ use ed25519_dalek::SigningKey as Ed25519SigningKey;
 use p256::{
     ecdsa::{signature::Signer, Signature, SigningKey},
     pkcs8::{DecodePrivateKey, EncodePrivateKey, LineEnding},
-    EncodedPoint,
+    elliptic_curve::{sec1::ToSec1Point, Generate},
+    Sec1Point,
 };
 use rand_core::{OsRng, RngCore};
 use rsa::{pkcs1v15::SigningKey as RsaSigningKey, traits::PublicKeyParts, RsaPrivateKey};
@@ -144,7 +145,7 @@ const ED25519_SPKI_PREFIX: &[u8] = &[
 
 // Encodes a P-256 verifying key as SPKI DER, then base64url (no padding).
 fn encode_public_key_spki(verifying_key: &p256::ecdsa::VerifyingKey) -> String {
-    let encoded_point = verifying_key.to_encoded_point(false);
+    let encoded_point = verifying_key.to_sec1_point(false);
     let mut spki = Vec::with_capacity(91);
     spki.extend_from_slice(P256_SPKI_PREFIX);
     spki.extend_from_slice(encoded_point.as_bytes());
@@ -219,7 +220,7 @@ fn build_auth_data_get(rp_id: &str, sign_count: u32) -> Vec<u8> {
 fn encode_cose_key(verifying_key: &p256::ecdsa::VerifyingKey) -> Result<Vec<u8>> {
     use ciborium::value::Value;
 
-    let point: EncodedPoint = verifying_key.to_encoded_point(false /* uncompressed */);
+    let point: Sec1Point = verifying_key.to_encoded_point(false /* uncompressed */);
     let x = point
         .x()
         .ok_or_else(|| Error::UnexpectedError("P-256 x coordinate missing".into()))?
@@ -393,7 +394,7 @@ pub fn create_passkey(options_json: &str, origin: &str) -> Result<PasskeyCreatio
         }
         _ => {
             // -7: ES256 / P-256 (default)
-            let sk = SigningKey::random(&mut OsRng);
+            let sk = SigningKey::generate();
             let cose = encode_cose_key(sk.verifying_key())?;
             let spki = encode_public_key_spki(sk.verifying_key());
             let pem = sk
@@ -487,7 +488,7 @@ pub fn create_passkey_with_hash(
         }
         _ => {
             // -7: ES256 / P-256 (default)
-            let sk = SigningKey::random(&mut OsRng);
+            let sk = SigningKey::generate();
             let cose = encode_cose_key(sk.verifying_key())?;
             let spki = encode_public_key_spki(sk.verifying_key());
             let pem = sk
