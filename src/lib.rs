@@ -10,6 +10,7 @@ pub mod custom_icons;
 
 mod db;
 mod db_merge;
+#[cfg(any(feature = "remote-storage", feature = "favicon"))]
 mod net_tls;
 #[cfg(any(feature = "favicon", feature = "favicon-local"))]
 pub mod favicon;
@@ -24,6 +25,7 @@ pub mod db_content;
 pub mod db_service;
 pub mod error;
 pub mod passkey_crypto;
+#[cfg(feature = "remote-storage")]
 pub mod remote_storage;
 pub mod util;
 
