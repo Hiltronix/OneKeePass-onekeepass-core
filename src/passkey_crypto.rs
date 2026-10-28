@@ -13,7 +13,7 @@ use ed25519_dalek::SigningKey as Ed25519SigningKey;
 use p256::{
     ecdsa::{signature::Signer, Signature, SigningKey},
     pkcs8::{DecodePrivateKey, EncodePrivateKey, LineEnding},
-    elliptic_curve::{sec1::ToSec1Point, Generate},
+    elliptic_curve::Generate,
     Sec1Point,
 };
 use rand_core::{OsRng, RngCore};
