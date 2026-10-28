@@ -220,7 +220,7 @@ fn build_auth_data_get(rp_id: &str, sign_count: u32) -> Vec<u8> {
 fn encode_cose_key(verifying_key: &p256::ecdsa::VerifyingKey) -> Result<Vec<u8>> {
     use ciborium::value::Value;
 
-    let point: Sec1Point = verifying_key.to_encoded_point(false /* uncompressed */);
+    let point: Sec1Point = verifying_key.to_sec1_point(false /* uncompressed */);
     let x = point
         .x()
         .ok_or_else(|| Error::UnexpectedError("P-256 x coordinate missing".into()))?
@@ -621,7 +621,7 @@ fn sign_with_pem(private_key_pem: &str, message: &[u8]) -> Result<String> {
     match algorithm {
         -257 => {
             use rsa::pkcs8::DecodePrivateKey as _;
-            use rsa::signature::SignatureEncoding;
+            use rsa::signature::{SignatureEncoding, Signer as _};
             let rsa_key = RsaPrivateKey::from_pkcs8_pem(private_key_pem)
                 .map_err(|e| Error::UnexpectedError(format!("RSA PEM decode failed: {}", e)))?;
             let signing_key = RsaSigningKey::<Sha256>::new(rsa_key);
