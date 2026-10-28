@@ -1,3 +1,4 @@
+#[cfg(feature = "remote-storage")]
 use reqwest_dav::re_exports::reqwest;
 use std::io;
 use uuid;
@@ -180,21 +181,26 @@ pub enum Error {
 
     ////  Remote storage specifc errors
     #[error("RusshError: {0}")]
+    #[cfg(feature = "remote-storage")]
     RusshError(#[from] russh::Error),
 
     #[error("RusshKeysError: {0}")]
+    #[cfg(feature = "remote-storage")]
     RusshKeysError(#[from] russh::keys::Error),
 
     #[error("RusshSftpClientError: {0}")]
+    #[cfg(feature = "remote-storage")]
     RusshSftpClientError(#[from] russh_sftp::client::error::Error),
 
     #[error("SftpServerAuthenticationFailed: Authentication to SFTP server failed")]
     SftpServerAuthenticationFailed,
 
     #[error("ReqwestError: {0}")]
+    #[cfg(feature = "remote-storage")]
     ReqwestError(#[from] reqwest::Error),
 
     #[error("ReqwestDavError: {0}")]
+    #[cfg(feature = "remote-storage")]
     ReqwestDavError(#[from] reqwest_dav::types::Error),
 
     #[error("NoRemoteStorageConnection")]
