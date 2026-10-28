@@ -59,21 +59,21 @@ csv = "1.4.0"
 ######## SFTP and WebDav ########
 
 
-russh-sftp = "2.3.0"
+russh-sftp = {version = "2.3.0", optional = true}
 ## russh 0.60.3+ fixes RUSTSEC-2026-0154 (unbounded SSH-agent frame allocation).
 ## russh-keys is no longer a separate dep: keys now live in russh::keys.
-russh = "0.61.2"
+russh = {version = "0.61.2", optional = true}
 
 ## This works for ios and android as it uses rustls
-reqwest_dav = {version = "0.3.3", default-features = false,features = ["rustls-tls"]}
+reqwest_dav = {version = "0.3.3", default-features = false,features = ["rustls-tls"], optional = true}
 
 ## reqwest 0.13 (pulled by reqwest_dav 0.3) defaults to rustls-platform-verifier
 ## for cert validation, which needs JVM init on Android. To avoid that we build a
 ## rustls config trusting the bundled Mozilla roots (webpki-roots) and hand it to
 ## reqwest via use_preconfigured_tls (see src/net_tls.rs). rustls is already in the
 ## tree via reqwest_dav; pinning 0.23 keeps the ClientConfig type matching reqwest's.
-rustls = "0.23"
-webpki-roots = "1.0"
+rustls = {version = "0.23", optional = true}
+webpki-roots = {version = "1.0", optional = true}
 
 ######## END SFTP and WebDav ########
 
@@ -95,11 +95,16 @@ version = "*"
 features = ["common-password"]
 
 [features]
+# Desktop and iOS keep existing remote-storage compatibility by default.
+# The offline Android client uses default-features=false and no remote-storage.
+default = ["remote-storage"]
+remote-storage = ["dep:russh-sftp", "dep:russh", "dep:reqwest_dav", "dep:rustls", "dep:webpki-roots"]
+
 # Preserve the original network-capable favicon feature for non-Windows clients.
 # Desktop portable builds use only image/ICO decoding and never compile the
 # optional remote favicon downloader.
 favicon-local = ["dep:image", "dep:ico"]
-favicon = ["favicon-local", "dep:reqwest"]
+favicon = ["favicon-local", "dep:reqwest", "dep:rustls", "dep:webpki-roots"]
 desktop-ssh-agent = []
 
 [lints.rust]
